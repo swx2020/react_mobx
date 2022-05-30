@@ -1,24 +1,24 @@
-import logo from './logo.svg';
 import './App.css';
+
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+// 导入组件
+import Login from './pages/login';
+import Layout from '@/pages/layout';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    // 路由配置
+    // 1 将最外层div元素 用 BrowserRouter包裹起来，是的使得路由(history模式)生效
+    <BrowserRouter>
+      <div className="App">
+        {/* 路由出口，在内部配置路由与组件的映射关系 */}
+        <Routes>
+          {/* 定义路由与组件的映射关系 */}
+          <Route path='/' element={<Layout></Layout>}></Route>
+          <Route path='/login' element={<Login></Login>}></Route>
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 
