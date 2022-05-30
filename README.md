@@ -1,3 +1,16 @@
+# mobx + react + antd + react-router
+## 整理项目目录
+  - 新建文件夹store -- 用于管理 数据状态和逻辑方法
+    * store文件夹中需要一个 index.js文件， 用于合并所有子模块
+
+  - 新建文件夹pages -- 用于存放项目的页面
+  - 新建文件夹components -- 用于管理公共组件
+  - 新建文件夹styles -- 用于存放css样式
+  - 新建文件夹hooks -- 用于存放自定义钩子函数
+  - 新建文件夹utils -- 用于管理工具方法
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
