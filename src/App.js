@@ -5,6 +5,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './pages/login';
 import Layout from '@/pages/layout';
 
+import AuthComponent from './components/AuthComponent';
+
 function App() {
   return (
     // 路由配置
@@ -14,7 +16,12 @@ function App() {
         {/* 路由出口，在内部配置路由与组件的映射关系 */}
         <Routes>
           {/* 定义路由与组件的映射关系 */}
-          <Route path='/' element={<Layout></Layout>}></Route>
+          <Route path='/' element={
+            // layout需要路由鉴权
+            <AuthComponent>
+              <Layout></Layout>
+            </AuthComponent>
+          }></Route>
           <Route path='/login' element={<Login></Login>}></Route>
         </Routes>
       </div>

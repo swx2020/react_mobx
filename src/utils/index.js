@@ -3,7 +3,15 @@
 // 导入所有的工具函数，然后统一导出
 
 import { http } from './http'
+import {
+  setToken,
+  getToken,
+  removeToken
+} from './token'
 
 export {
-  http
+  http,
+  setToken,
+  getToken,
+  removeToken
 }

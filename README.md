@@ -133,10 +133,113 @@ module.exports = {
 ### 表单
   - 使用 antd 的组件 -- Form Checkbox等
   - 参照文档，实现表单 校验， 获取表单数据等功能
+  - 注意：本次项目中的验证码必须是 246810 
 
 ### axios
   - 安装： npm i axios
   - 在utlis文件夹中新建 http.js文件 -- 用于封装axios
+
+
+### 登录功能的实现
+  - 点击按钮，提交表单
+  - 成功后
+    * 跳转页面
+    * message提示框
+
+### token持久化
+  - 创建 utils/token.js
+  - 分别提供 getToken/setToken/clearToken/isAuth四个工具函数并导出
+  - 创建 utils/index.js 文件，统一导出token.js中的内容
+  - 替换原先 用到token 的函数 为当前的工具函数
+
+```js
+// token.js
+// 封装 localStorage 存取 token
+
+const key = 'mobx-project ^^'
+
+const setToken = (token) => {
+  return window.localStorage.setItem(key, token)
+  // key 和 token 是一对键值对！！！！
+  // 即最终 存入 localStorage中的数据是：
+  // 表头 key       value
+  // 表格 key       token
+
+  // 所以取值的时候，只需要通过 key 就能获取到token
+
+  // 函数 window.localStorage.setItem(key, token)有一个返回值
+  // 这个返回值 表示 执行成功还是执行失败，将这个返回值返回出去
+
+  // 所以 setToken函数 返回的是 存入成功还是失败的结果
+}
+
+const getToken = () => {
+  return window.localStorage.getItem(key)
+  // 最终 存入 localStorage中的数据是：
+  // 表头 key       value
+  // 表格 key       token
+
+  // 所以取值的时候，只需要通过 key 就能获取到token
+  // window.localStorage.getItem(key)函数的返回值是 key对应的token
+  // 所以getToken函数返回的是token
+}
+
+const removeToken = () => {
+  return window.localStorage.removeItem(key)
+  // window.localStorage.removeItem(key)函数有一个返回值
+  // 这个返回值表示的是 【移除成功还是失败】，将这个执行结果返回出去
+
+  // 所以 removeToken函数 返回的是 移除成功还是失败的结果
+}
+
+export {
+  setToken,
+  getToken,
+  removeToken
+}
+```
+
+### 在请求拦截器中 注入 token -- 目的：一处配置，多处生效
+  - 在http模块，在请求拦截器中，判断本地是否存在token
+  - 如果存在，就在这里将token 注入到请求头中，这样就不需要在每个需要token的地方都手动添加一遍token了
+
+```js
+// 3 请求拦截器
+http.interceptors.request.use(config => {
+
+  // 在请求拦截器中，判断本地是否存在token
+  // 如果存在，就在这里将token 注入到请求头中，这样就不需要在每个需要token的地方都手动添加一遍token了
+
+  // 取出本地的token
+  const token = getToken()
+  if (token) {
+    // token存在，则注入到请求头中
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
+  return config
+}, err => {
+  return Promise.reject(err)
+})
+```
+
+
+### 路由鉴权 -- 未登录时访问 则 强制跳转到 登录页面
+  - react中 没有 vue的路由导航
+  - 所以这里需要自己封装一个组件，实现路由鉴权
+  - 思路：
+    ***判断本地是否存在token， 有，就返回子组件，没有，就重定向跳转到登录页面***
+#### 步骤
+  - 在 components 目录中，创建 AuthComponent/index.js文件
+  - 判断是否登录
+    * 已登录，则直接渲染当前页面
+    * 未登录，则重定向到登录页面: 重定向 通过 路由的内置组件Navigate的to属性 指定跳转的页面
+  - 将需要鉴权的页面路由配置，替换为AuthRoute组件渲染
+
+
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
