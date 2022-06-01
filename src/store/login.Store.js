@@ -2,7 +2,7 @@
 import { makeAutoObservable } from "mobx"
 
 // 导入http模块
-import { http, setToken, getToken } from "../utils"
+import { http, setToken, getToken, removeToken } from "../utils"
 
 class LoginStore {
   // 为了确保 token 的持久化，这里不能直接设置token为空字符串，否则一刷新，已存在的token就会被重新赋值为空字符串
@@ -28,6 +28,17 @@ class LoginStore {
     this.token = ret.data.token
     // 将token存入localStorage
     setToken(this.token)
+  }
+
+  // 退出登录
+  logout = () => {
+    this.token = ''
+    removeToken()
+
+    // 注意： 跳转的操作不能 这里进行
+    // 因为 react中的 hook(useXXX)，只能在两个地方使用
+    // 1 在其他hook内部
+    // 2 在函数组件中
   }
 }
 

@@ -9,9 +9,12 @@ import {
   removeToken
 } from './token'
 
+import { history } from './history'
+
 export {
   http,
   setToken,
   getToken,
-  removeToken
+  removeToken,
+  history
 }

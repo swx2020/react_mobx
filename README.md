@@ -237,8 +237,410 @@ http.interceptors.request.use(config => {
   - 将需要鉴权的页面路由配置，替换为AuthRoute组件渲染
 
 
+## Layout 模块
+### 基本结构
+#### 报错： 
+  - Warning: [antd: Menu] `children` will be removed in next major version. Please use `items` instead.
+  - 原因时 Ant Design中的Menu组件的使用发生更改
+    * 原先用法： <Menu> 的子组件是 <Menu.Item>
+    * 但是现在要求 通过 属性items 的方式写子组件
+
+```jsx
+// 以前的写法： Menu
+
+function GeekLayout() {
+  return (
+    <Layout>
+      <Header className="header">
+        ...
+      </Header>
+      <Layout>
+        <Sider width={200} className="site-layout-background">
+          <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} style={{ height: '100%', borderRight: 0 }}>
+            <Menu.Item icon={<HomeOutlined></HomeOutlined>} key="1">
+              数据概览
+            </Menu.Item>
+            <Menu.Item icon={<DiffOutlined></DiffOutlined>} key="2">
+              内容管理
+            </Menu.Item>
+            <Menu.Item icon={<EditOutlined></EditOutlined>} key="3">
+              发布文章
+            </Menu.Item>
+          </Menu>
+        </Sider>
+        <Layout className='layout-content' style={{ padding: 20}}>内容</Layout>
+      </Layout>
+    </Layout>
+  );
+}
+
+export default GeekLayout;
+```
+
+```jsx
+// 现在的写法： 
+
+function GeekLayout() {
+  return (
+    <Layout>
+      <Header className="header">
+        ...
+      </Header>
+      <Layout>
+        <Sider width={200} className="site-layout-background">
+          <Menu
+            mode="inline"
+            theme="dark"
+            defaultSelectedKeys={["1"]}
+            style={{ height: "100%", borderRight: 0 }}
+            items={[
+              {
+                key: "1",
+                icon: <HomeOutlined />,
+                label: `数据概览`,
+                //当点击该标签， 跳转到Home
+              },
+              {
+                key: "2",
+                icon: <DiffOutlined />,
+                label: "内容管理"
+              },
+              {
+                key: "3",
+                icon: <EditOutlined />,
+                label: "发布文章"
+              },
+            ]}
+          ></Menu>
+        </Sider>
+        <Layout className='layout-content' style={{ padding: 20}}>内容</Layout>
+      </Layout>
+    </Layout>
+  );
+}
+
+```
+
+### 二级路由
+  - 在pages文件夹下，创建 Home(数据概览) Article(内容管理) Publish(发布文章)文件夹
+  - 在每个文件夹下新建index.js, 并创建基础组件并导出
+  - 在 App.js 中配置二级路由
+  - 使用react-router-dom内置hook获取 页面跳转的函数， 从而通过绑定 点击事件onClick 实现二级菜单的跳转功能
+```jsx
+// hook要在最上方进行导入
+// 导入 函数 useNavigate
+import { useNavigate, useLocation } from "react-router-dom";
+
+function GeekLayout() {
+  // 获取 跳转的函数
+  const navigate = useNavigate();
+
+  return (
+    <Layout>
+      <Header className="header">
+        ...
+      </Header>
+      <Layout>
+        <Sider width={200} className="site-layout-background">
+          <Menu
+            mode="inline"
+            theme="dark"
+            defaultSelectedKeys={['1']}
+            style={{ height: "100%", borderRight: 0 }}
+            items={[
+              {
+                key: "1",
+                icon: <HomeOutlined />,
+                label: `数据概览`,
+                //当点击该标签， 跳转到Home
+                onClick: () => navigate("/"),
+              },
+              {
+                key: "2",
+                icon: <DiffOutlined />,
+                label: "内容管理",
+                //当点击该标签， 跳转到Article
+                onClick: () => navigate("/article"),
+              },
+              {
+                key: "3",
+                icon: <EditOutlined />,
+                label: "发布文章",
+                //当点击该标签， 跳转到Publish
+                onClick: () => navigate("/publish"),
+              },
+            ]}
+          ></Menu>
+        </Sider>
+        <Layout className="layout-content" style={{ padding: 20 }}>
+          {/* 二级路由的出口！！！！ */}
+          <Outlet></Outlet>
+        </Layout>
+      </Layout>
+    </Layout>
+  );
+}
+```
+
+### 菜单的高亮设置
+  - 通过设置 selectedKeys
+```jsx
+// hook要在最上方进行导入
+// 导入 函数 useNavigate
+import { useNavigate, useLocation } from "react-router-dom";
+
+function GeekLayout() {
+  // 获取 跳转的函数
+  const navigate = useNavigate();
+
+  // 高亮
+  // 获取当前 url的pathname
+  const { pathname } = useLocation();
+  const highlight = () => {
+    switch (pathname) {
+      case "/article":
+        return ["2"];
+      case "/publish":
+        return ["3"];
+      default:
+        return ["1"];
+    }
+  };
+
+  return (
+    <Layout>
+      <Header className="header">
+        ...
+      </Header>
+      <Layout>
+        <Sider width={200} className="site-layout-background">
+          <Menu
+            mode="inline"
+            theme="dark"
+            defaultSelectedKeys={['1']}
+            // 属性selectedKeys的值应该根据当前路由对应的item的key来决定
+            // 原理： selectedKeys === currentItem.key
+            // 通过useLocation获取当前的pathname 来实现, 并返回对应的key值
+            selectedKeys={highlight()}
+
+            style={{ height: "100%", borderRight: 0 }}
+            items={[
+              ...
+            ]}
+          ></Menu>
+        </Sider>
+        <Layout className="layout-content" style={{ padding: 20 }}>
+          {/* 二级路由的出口！！！！ */}
+          <Outlet></Outlet>
+        </Layout>
+      </Layout>
+    </Layout>
+  );
+}
+```
+
+### 退出登录
+  - 参考官网中 Popconfirm 组件的使用
+  - onConfirm	点击确认的回调	function(e)
+  - 在回调函数中需要实现两个功能：
+    * 清除token
+    * 跳转到登录页面
+  - 注意：逻辑代码 写在 mobx 中！！！！
+  - 当前组件只需要负责触发退出登录的方法
+
+```js
+// store
+
+// 导入http模块
+import { ..., removeToken } from "../utils"
+class LoginStore {
+  ...
+  // 退出登录
+  logout = () => {
+    this.token = ''
+    removeToken()
+
+    // 注意： 跳转的操作不能 这里进行
+    // 因为 react中的 hook(useXXX)，只能在两个地方使用
+    // 1 在其他hook内部
+    // 2 在函数组件中
+  }
+}
+export default LoginStore
+```
+
+```jsx
+// 组件
+
+// hook要在最上方进行导入
+// 导入 函数 useNavigate
+import { useNavigate, useLocation } from "react-router-dom";
+import { useStore } from "../../store";
+
+function GeekLayout() {
+  
+  // 获取 跳转的函数
+  const navigate = useNavigate();
+  const { userStore, loginStore } = useStore();
+
+  ...
+
+  // 退出登录
+  const onConfirm = () => {
+    // 调用 loginStore中的方法
+
+    // 清除token值
+    loginStore.logout();
+
+    // 跳转
+    navigate("/login");
+    // 注意： 跳转的操作不能再 mobx中使用
+    // 因为 react中的 hook(useXXX)，只能在两个地方使用
+    // 1 在其他hook内部
+    // 2 在函数组件中
+  };
+
+  return (
+    <Layout>
+      <Header className="header">
+        <div className="logo"></div>
+        <div className="user-info">
+          <span className="user-name"> {userStore.userInfo.name} </span>
+          <span className="user-logout">
+
+            <Popconfirm
+              title="是否确认退出？"
+              okText="退出"
+              cancelText="取消"
+              // 点击确认时的回调函数
+              onConfirm={onConfirm}
+            >
+              <LogoutOutlined /> 退出
+            </Popconfirm>
+
+          </span>
+        </div>
+      </Header>
+      <Layout>
+        <Sider width={200} className="site-layout-background">
+          ...
+        </Sider>
+        <Layout className="layout-content" style={{ padding: 20 }}>
+          {/* 二级路由的出口 */}
+          <Outlet></Outlet>
+        </Layout>
+      </Layout>
+    </Layout>
+  );
+}
+```
+
+### 处理Token失效
+  - token通常会有一个有效时间
+  - 超过有效时间就会失效，此时token 就不再能够实现鉴权的功能，需要清除
+  - 在 http模块的 响应拦截器 中处理失效的token
+    * err.response.status === 401时， 需要设置疼跳转到login页面
+    * ***但是注意： 在组件外部 react-router默认是不能进行路由跳转的！！！***
+    * 所以需要进行配置
+   
+#### 新建 history.js 文件， 配置history对象
+  - 安装： npm i history
+  - 配置： 
+    * 1 安装 history包
+    * 2 从 history包 中取出函数createBrowserHistory
+    * 3 调用函数，得到history对象
+    * 4 导出 history对象
+    * 5 将history对象 配置到 App.js文件的路由中 
+
+```js
+// 1 安装 history包
+
+// 2 从 history包 中取出函数createBrowserHistory
+import { createBrowserHistory } from "history";
+
+// 3 调用函数，得到history对象
+const history = createBrowserHistory()
+
+// 4 导出 history对象
+export { history }
+
+// 5 将history对象 配置到 App.js文件的路由中 
+```
+
+#### 将 获取的history对象 配置在 App.js 的路由中
+  - 1 导入 unstable_HistoryRouter 并命名为 HistoryRouter，用于实现在组件外部也能够跳转路由
+  - 2 使用 HistoryRouter 替换 BrowserRouter
+  - 3 导入history对象
+  - 4 给 HistoryRouter组件标签 添加一个history属性，并赋值为history对象
+  - 5 在mobx中导入history对象 
+  - 6 在mobx的逻辑代码中使用history对象的push方法进行路由跳转
+
+```jsx
+// 1 导入 unstable_HistoryRouter 并命名为 HistoryRouter，用于实现在组件外部也能够跳转路由
+// 2 使用 HistoryRouter标签 替换 BrowserRouter
+import { unstable_HistoryRouter as HistoryRouter, BrowserRouter, Routes, Route } from 'react-router-dom';
+// 3 导入history对象
+import { history } from './utils';
+// 4 给 HistoryRouter组件标签 添加一个history属性，并赋值为history对象
+// 5 在mobx中导入history对象 
+// 6 在mobx的逻辑代码中使用history对象的push方法进行路由跳转
 
 
+function App() {
+  return (
+    // 路由配置
+    // 2 使用 HistoryRouter标签 替换 BrowserRouter
+    // 4 给 HistoryRouter组件标签 添加一个history属性，并赋值为history对象
+    <HistoryRouter history={history}>
+      ...
+    </HistoryRouter>
+  );
+}
+
+export default App;
+```
+
+#### http 模块中 处理 失效token
+  - 在 响应失败的 回调函数中处理
+  - 当 err.response.status为401时，代表用户信息失效（token失效）
+  - 此时，需要跳转页面到登录页面
+    * 导入 history对象
+    * 调用 history对象的push方法， 并传入登录页面的 path
+
+```js
+// 1 导入axios
+import axios from 'axios'
+
+// 导入history对象，实现在 组件外部进行路由跳转
+import { history } from './history'
+
+...
+
+// 4 响应拦截器
+http.interceptors.response.use(res => {
+  return res.data
+}, err => {
+
+  // 判断token是否失效
+  // 条件： 如果状态码为401，则表示 token失效
+  console.dir(err)
+  if (err.response.status === 401) {
+    // 跳回到登录页面
+
+    // react中的router不支持在 react上下文的环境(组件)之外 实现路由跳转
+
+    // 手动实现 react context 外部的 路由跳转
+    history.push('/login')
+  }
+
+  return Promise.reject(err)
+})
+```
+
+
+### echart 图标的实现
+  - 安装： npm i echarts
+  - 在components文件夹中新建组件Bar
 
 # Getting Started with Create React App
 
