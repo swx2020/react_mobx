@@ -321,6 +321,50 @@ function GeekLayout() {
 
 ```
 
+
+#### 警告：
+  - [MobX] Since strict-mode is enabled, changing (observed) observable values without using an action is not allowed. Tried to modify: UserStore@2.userInfo
+  - 原因：
+    * mobx中只能在acrion中重新赋值！！！
+    * 然而 在异步操作中/后 更改 状态的值 时 需要再次包装为动作（使用回调函数再次包装）！！！
+    * async/await 本质是 promise的语法糖！也是异步操作！
+    * ***await 之后，再次修改状态需要动作: 借助mobx的语法糖 runInAction(f) --- 在函数 runInAction 中进行修改***
+```js
+// 用户信息相关
+import { makeAutoObservable, runInAction } from "mobx";
+import { http } from '@/utils'
+
+class UserStore {
+  userInfo = {}
+
+  constructor() {
+    makeAutoObservable(this)
+  }
+
+  getUserInfo = async () => {
+    // 调用接口
+    const ret = await http.get('/user/profile')
+
+    // mobx中只能在acrion中重新赋值！！！
+    //  异步操作 更改 状态的值 时 需要再次包装为动作（使用回调函数再次包装）
+
+    // https://blog.csdn.net/weixin_49684995/article/details/119890230
+    // https://cn.mobx.js.org/best/actions.html   (5.1-5.2)
+
+    //  // await 之后，再次修改状态需要动作: 借助mobx的语法糖 runInAction(f)
+    // 在函数 runInAction 中进行修改
+    runInAction(() => {
+      // 在回调函数中修改 状态的值
+      this.userInfo = ret.data
+    })
+  }
+}
+
+export default UserStore
+```
+
+
+
 ### 二级路由
   - 在pages文件夹下，创建 Home(数据概览) Article(内容管理) Publish(发布文章)文件夹
   - 在每个文件夹下新建index.js, 并创建基础组件并导出
@@ -641,6 +685,16 @@ http.interceptors.response.use(res => {
 ### echart 图标的实现
   - 安装： npm i echarts
   - 在components文件夹中新建组件Bar
+  - 封装基本的echarts柱状图
+  - 注意！！！***echarts图表的前提是有一个dom挂载点(函数组件-useRef)***
+  - 注意！！！***react中获取真实dom元素需要在组件中dom完成挂载后才能获取(函数组件-useEffect)***
+
+
+## 内容管理-article
+### 筛选区域
+  - 直接复制了 课程资料中的代码。。。。
+
+### 表格区域结构
 
 # Getting Started with Create React App
 
